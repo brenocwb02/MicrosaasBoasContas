@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    /* Estilo consistente com as outras sidebars */
+    * { box-sizing: border-box; font-family: 'Roboto', Arial, sans-serif; }
+    body { margin: 0; padding: 20px; background-color: #0f172a; color: #e2e8f0; }
+    form { display: flex; flex-direction: column; gap: 18px; }
+    .form-group { display: flex; flex-direction: column; }
+    label { margin-bottom: 8px; font-weight: 500; color: #94a3b8; font-size: 13px; }
+    input {
+      width: 100%; padding: 12px; border: 1px solid #334155;
+      border-radius: 8px; background-color: #1e293b; color: #e2e8f0;
+      font-size: 14px; transition: all 0.2s;
+    }
+    input:focus {
+      outline: none; border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    button {
+      background: linear-gradient(to right, #16a34a, #22c55e);
+      color: #ffffff; font-weight: bold; padding: 14px;
+      border: none; border-radius: 8px; cursor: pointer;
+      width: 100%; font-size: 16px; transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+      margin-top: 10px;
+    }
+    button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+    h3 { color: #f1f5f9; }
+    p { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+    .status-message { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; text-align: center; font-size: 14px; }
+    .success { background-color: #166534; color: #a7f3d0; border: 1px solid #22c55e;}
+    .error { background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444;}
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+</head>
+<body>
+
+  <h3>Ativar Produto</h3>
+  <p>Por favor, insira a chave de licença que recebeu no seu e-mail de boas-vindas para ativar a sua planilha.</p>
+
+  <form id="activationForm">
+    <div class="form-group">
+      <label for="licenseKey">Chave de Licença</label>
+      <input type="text" id="licenseKey" name="licenseKey" placeholder="Ex: BC-XXXX-XXXX-XXXX" required>
+    </div>
+    
+    <button type="submit" id="submitButton">Ativar</button>
+  </form>
+
+  <div id="status" class="status-message"></div>
+
+  <script>
+    document.getElementById("activationForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const submitButton = document.getElementById('submitButton');
+      const statusDiv = document.getElementById('status');
+      submitButton.disabled = true;
+      submitButton.textContent = 'A Ativar...';
+      
+      const licenseKey = document.getElementById('licenseKey').value;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          statusDiv.innerHTML = response + "<br><br><b>Recarregue a página (F5) para aceder ao menu completo.</b>";
+          statusDiv.className = "status-message success";
+          statusDiv.style.display = "block";
+          // Não reativamos o botão para o caso de o utilizador querer tentar outra chave.
+          submitButton.disabled = false;
+          submitButton.textContent = 'Ativar';
+        })
+        .withFailureHandler(function(error) {
+           statusDiv.textContent = "Erro: " + error.message;
+           statusDiv.className = "status-message error";
+           statusDiv.style.display = "block";
+           submitButton.disabled = false;
+           submitButton.textContent = 'Ativar';
+        })
+        .activateLicense(licenseKey);
+    });
+  </script>
+
+</body>
+</html>
