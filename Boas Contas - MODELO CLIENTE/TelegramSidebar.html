@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    /* Estilo consistente com as outras sidebars */
+    * { box-sizing: border-box; font-family: 'Roboto', Arial, sans-serif; }
+    body { margin: 0; padding: 20px; background-color: #0f172a; color: #e2e8f0; }
+    form { display: flex; flex-direction: column; gap: 18px; }
+    .form-group { display: flex; flex-direction: column; }
+    label { margin-bottom: 8px; font-weight: 500; color: #94a3b8; font-size: 13px; }
+    input {
+      width: 100%; padding: 12px; border: 1px solid #334155;
+      border-radius: 8px; background-color: #1e293b; color: #e2e8f0;
+      font-size: 14px; transition: all 0.2s;
+    }
+    input:focus {
+      outline: none; border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    button {
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      color: #ffffff; font-weight: bold; padding: 14px;
+      border: none; border-radius: 8px; cursor: pointer;
+      width: 100%; font-size: 16px; transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      margin-top: 10px;
+    }
+    button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+    p, li { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ol { padding-left: 20px; }
+    .status-message { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; text-align: center; font-size: 14px; }
+    .success { background-color: #166534; color: #a7f3d0; border: 1px solid #22c55e;}
+    .error { background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444;}
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+</head>
+<body>
+
+  <h3>Configurar Integração com o Telegram</h3>
+  <p>Para usar o bot, precisa de nos dizer o seu ID do Chat do Telegram. Siga estes passos:</p>
+  <ol>
+    <li>Abra o Telegram e procure por <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>.</li>
+    <li>Inicie uma conversa e o bot irá mostrar-lhe o seu ID.</li>
+    <li>Copie o número do ID e cole-o no campo abaixo.</li>
+  </ol>
+
+  <form id="telegramForm">
+    <div class="form-group">
+      <label for="clientName">O seu Nome</label>
+      <input type="text" id="clientName" name="clientName" placeholder="Como gostaria de ser chamado" required>
+    </div>
+    <div class="form-group">
+      <label for="chatId">Seu ID do Chat do Telegram</label>
+      <input type="text" id="chatId" name="chatId" placeholder="Cole o seu ID do chat aqui" required>
+    </div>
+    
+    <button type="submit" id="submitButton">Registar</button>
+  </form>
+
+  <div id="status" class="status-message"></div>
+
+  <script>
+    document.getElementById("telegramForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const submitButton = document.getElementById('submitButton');
+      const statusDiv = document.getElementById('status');
+      submitButton.disabled = true;
+      submitButton.textContent = 'A Registar...';
+      
+      const dados = {
+        chatId: document.getElementById('chatId').value,
+        clientName: document.getElementById('clientName').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          statusDiv.textContent = response;
+          statusDiv.className = "status-message success";
+          statusDiv.style.display = "block";
+          submitButton.disabled = false;
+          submitButton.textContent = 'Registar';
+        })
+        .withFailureHandler(function(error) {
+           statusDiv.textContent = "Erro: " + error.message;
+           statusDiv.className = "status-message error";
+           statusDiv.style.display = "block";
+           submitButton.disabled = false;
+           submitButton.textContent = 'Registar';
+        })
+        .registrarTelegram(dados);
+    });
+  </script>
+
+</body>
+</html>
+
