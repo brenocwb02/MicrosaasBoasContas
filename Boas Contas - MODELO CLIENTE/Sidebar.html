@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    /* Reset e Configuração Base */
+    * {
+      box-sizing: border-box;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: #0f172a; /* Azul-noite */
+      color: #e2e8f0; /* Texto claro */
+    }
+    .container {
+      padding: 20px;
+    }
+    form { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+    }
+    .form-group { 
+      display: flex; 
+      flex-direction: column; 
+    }
+    label { 
+      margin-bottom: 8px; 
+      font-weight: 500; 
+      color: #94a3b8; /* Cinzento azulado claro */
+      font-size: 13px; 
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #334155; /* Borda subtil */
+      border-radius: 8px;
+      background-color: #1e293b; /* Fundo do campo, um tom mais claro */
+      color: #e2e8f0; /* Texto do campo */
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.8);
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6; /* Azul brilhante ao focar */
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    input::placeholder {
+      color: #64748b;
+    }
+
+    /* Navegação por Abas */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #334155;
+      margin-bottom: 24px;
+    }
+    .tab-button {
+      flex: 1; padding: 12px 0; background: none; border: none;
+      color: #94a3b8; font-weight: bold; font-size: 13px;
+      cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .tab-button:hover { color: #e2e8f0; }
+    .tab-button.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+
+    /* Botões de TIPO */
+    .tipo-group {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;
+      background-color: #1e293b; padding: 5px; border-radius: 8px;
+    }
+    .tipo-group button {
+      background-color: transparent; color: #94a3b8; border: none;
+      padding: 8px 0; border-radius: 6px; cursor: pointer;
+      font-weight: bold; transition: all 0.2s ease-in-out;
+    }
+    .tipo-group button.active {
+      background-color: #3b82f6; color: #ffffff;
+      box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Botão de Submissão */
+    button[type="submit"] {
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      color: #ffffff; font-weight: bold; padding: 14px;
+      border: none; border-radius: 8px; cursor: pointer;
+      width: 100%; font-size: 16px; transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      margin-top: 10px;
+    }
+    button[type="submit"]:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+    }
+    button:disabled { 
+      background: #334155; color: #64748b; cursor: not-allowed; 
+      transform: none; box-shadow: none;
+    }
+
+    /* Mensagens de Status */
+    .status-message { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; text-align: center; font-size: 14px; }
+    .success { background-color: #166534; color: #a7f3d0; border: 1px solid #22c55e;}
+    .error { background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444;}
+    
+    .parcelas-group { display: none; }
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+</head>
+<body>
+
+  <div class="tabs">
+    <button class="tab-button active" type="button">TRANSAÇÃO</button>
+    <button class="tab-button" type="button">TRANSFERÊNCIA</button>
+    <button class="tab-button" type="button">CONTA A PAGAR</button>
+  </div>
+  
+  <div class="container">
+    <form id="lancamentoForm">
+      <div class="form-group">
+        <label>Tipo</label>
+        <div class="tipo-group">
+          <button type="button" class="active" data-value="Despesa">Despesa</button>
+          <button type="button" data-value="Receita">Receita</button>
+          <button type="button" data-value="Transferência">Transferência</button>
+        </div>
+        <input type="hidden" id="tipo" name="tipo" value="Despesa">
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" name="descricao" placeholder="Ex: Compras no mercado" required>
+      </div>
+
+      <div class="form-group">
+        <label for="valor">Valor</label>
+        <input type="text" inputmode="decimal" id="valor" name="valor" placeholder="Ex: 150,75" required>
+      </div>
+
+      <div class="form-group">
+        <label for="data">Data</label>
+        <input type="date" id="data" name="data" required>
+      </div>
+
+      <div class="form-group">
+        <label for="categoria">Categoria</label>
+        <select id="categoria" name="categoria" required><option>Carregando...</option></select>
+      </div>
+
+      <div class="form-group">
+        <label for="subcategoria">Subcategoria</label>
+        <select id="subcategoria" name="subcategoria"><option>(Nenhuma)</option></select>
+      </div>
+
+      <div class="form-group">
+        <label for="conta">Conta / Cartão</label>
+        <select id="conta" name="conta" required><option>Carregando...</option></select>
+      </div>
+
+      <div class="form-group">
+        <label for="metodoPagamento">Método de Pagamento</label>
+        <select id="metodoPagamento" name="metodoPagamento" required>
+          <option value="credito">Crédito</option>
+          <option value="debito">Débito</option>
+          <option value="pix">PIX</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="boleto">Boleto</option>
+          <option value="transferencia">Transferência</option>
+        </select>
+      </div>
+
+      <div class="form-group parcelas-group" id="parcelasDiv">
+        <label for="parcelasTotais">Nº de Parcelas</label>
+        <input type="number" id="parcelasTotais" name="parcelasTotais" min="1" value="1">
+      </div>
+
+      <button type="submit" id="submitButton">Adicionar</button>
+    </form>
+    <div id="status" class="status-message"></div>
+  </div>
+
+  <script>
+    let categoriasData = {};
+
+    function atualizarSubcategorias() {
+      const categoriaSelecionada = document.getElementById('categoria').value;
+      const subcategoriaSelect = document.getElementById('subcategoria');
+      subcategoriaSelect.innerHTML = '<option value="">(Nenhuma)</option>';
+
+      if (categoriasData[categoriaSelecionada] && categoriasData[categoriaSelecionada].length > 0) {
+        subcategoriaSelect.disabled = false;
+        categoriasData[categoriaSelecionada].forEach(sub => {
+          if(sub) { 
+            const opt = document.createElement('option');
+            opt.value = sub; opt.innerHTML = sub;
+            subcategoriaSelect.appendChild(opt);
+          }
+        });
+      } else {
+        subcategoriaSelect.disabled = true;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('data').valueAsDate = new Date();
+
+      google.script.run
+        .withSuccessHandler(function(dados) {
+          categoriasData = dados.categorias;
+          const categoriaSelect = document.getElementById('categoria');
+          categoriaSelect.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+          Object.keys(categoriasData).sort().forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat; opt.innerHTML = cat;
+            categoriaSelect.appendChild(opt);
+          });
+          atualizarSubcategorias();
+
+          const contaSelect = document.getElementById('conta');
+          contaSelect.innerHTML = '<option value="" disabled selected>Selecione...</option>';
+          dados.contas.sort().forEach(conta => {
+            const opt = document.createElement('option');
+            opt.value = conta; opt.innerHTML = conta;
+            contaSelect.appendChild(opt);
+          });
+        })
+        .withFailureHandler(err => document.getElementById('status').textContent = "Erro: " + err.message)
+        .getDadosIniciais();
+
+      const tipoGroup = document.querySelector('.tipo-group');
+      const tipoInput = document.getElementById('tipo');
+      tipoGroup.addEventListener('click', function(e) {
+        if(e.target.tagName === 'BUTTON') {
+          tipoGroup.querySelector('.active').classList.remove('active');
+          e.target.classList.add('active');
+          tipoInput.value = e.target.dataset.value;
+        }
+      });
+      
+      // CORREÇÃO: O event listener das parcelas foi movido para dentro do DOMContentLoaded para garantir que existe
+      document.getElementById('metodoPagamento').addEventListener('change', function(e) {
+        document.getElementById('parcelasDiv').style.display = (e.target.value === 'credito') ? 'block' : 'none';
+      });
+    });
+
+    document.getElementById('categoria').addEventListener('change', atualizarSubcategorias);
+    
+    document.getElementById("lancamentoForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const submitButton = document.getElementById('submitButton');
+      const statusDiv = document.getElementById('status');
+      submitButton.disabled = true;
+      submitButton.textContent = 'A Adicionar...';
+      
+      const form = e.target;
+      const formData = {
+        data: form.data.value,
+        descricao: form.descricao.value,
+        valor: form.valor.value,
+        tipo: form.tipo.value,
+        categoria: form.categoria.value,
+        subcategoria: form.subcategoria.value,
+        conta: form.conta.value,
+        metodoPagamento: form.metodoPagamento.options[form.metodoPagamento.selectedIndex].text,
+        parcelasTotais: form.parcelasTotais.value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          statusDiv.textContent = response;
+          statusDiv.className = "status-message success";
+          statusDiv.style.display = "block";
+          form.reset();
+          document.getElementById('data').valueAsDate = new Date();
+          document.getElementById('parcelasDiv').style.display = 'none';
+          const tipoGroup = document.querySelector('.tipo-group');
+          tipoGroup.querySelector('.active').classList.remove('active');
+          tipoGroup.querySelector('button[data-value="Despesa"]').classList.add('active');
+          document.getElementById('tipo').value = 'Despesa';
+          
+          setTimeout(() => { 
+            statusDiv.style.display = "none";
+            submitButton.disabled = false;
+            submitButton.textContent = 'Adicionar';
+          }, 2500);
+        })
+        .withFailureHandler(function(error) {
+          statusDiv.textContent = "Erro: " + error.message;
+          statusDiv.className = "status-message error";
+          statusDiv.style.display = "block";
+          submitButton.disabled = false;
+          submitButton.textContent = 'Adicionar';
+        })
+        .processarFormularioLancamento(formData);
+    });
+  </script>
+</body>
+</html>
+
