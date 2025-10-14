@@ -28,52 +28,52 @@ function obterInfoCartao(nomeCartao, ss) {
 }
 
 /**
- * VERSÃO FINAL E CORRIGIDA: Calcula a data de vencimento da fatura com precisão.
- * @param {Date} dataTransacao A data da compra.
- * @param {object} infoCartao Os dados do cartão da aba 'Contas'.
- * @param {number} mesesAdicionais Para compras parceladas.
- * @returns {Date} A data de vencimento correta.
+ * VERSÃO CORRIGIDA
+ * Calcula a data de vencimento correta de uma parcela de cartão de crédito.
+ * Esta função substitui a versão anterior para lidar corretamente com todos os tipos de cartões.
+ *
+ * @param {Date} dataCompra A data em que a compra foi realizada.
+ * @param {object} infoCartao Objeto com as informações do cartão.
+ * @param {number} infoCartao.diaFechamento O dia do mês em que a fatura fecha.
+ * @param {number} infoCartao.diaVencimento O dia do mês em que a fatura vence.
+ * @param {number} mesesAdicionais O número de meses a adicionar (para parcelas). O padrão é 0 para a primeira parcela.
+ * @returns {Date} A data de vencimento calculada.
  */
-function calcularVencimentoFatura(dataTransacao, infoCartao, mesesAdicionais = 0) {
-  const diaVencimento = parseInt(infoCartao['Dia de Vencimento']);
-  if (isNaN(diaVencimento)) {
-    Logger.log(`[ERRO Vencimento] Dia de vencimento inválido para '${infoCartao['Nome da Conta']}'.`);
-    return new Date(); // Retorno seguro
-  }
+function calcularVencimentoFatura(dataCompra, infoCartao, mesesAdicionais = 0) {
+    const diaCompra = dataCompra.getDate();
+    const mesCompra = dataCompra.getMonth();
+    const anoCompra = dataCompra.getFullYear();
 
-  // 1. Define a data base da transação, já considerando as parcelas
-  let dataEfetiva = new Date(dataTransacao);
-  if (mesesAdicionais > 0) {
-    dataEfetiva.setMonth(dataEfetiva.getMonth() + mesesAdicionais);
-  }
-  dataEfetiva.setHours(0, 0, 0, 0);
+    let mesVencimento;
+    let anoVencimento = anoCompra;
 
-  // 2. Define a data de vencimento do ciclo ATUAL da compra
-  // (Ex: compra em Outubro -> vencimento em Novembro)
-  let vencimentoCicloAtual = new Date(dataEfetiva.getFullYear(), dataEfetiva.getMonth() + 1, diaVencimento);
+    if (infoCartao.diaVencimento > infoCartao.diaFechamento) {
+        // CASO 1: Fechamento e Vencimento no mesmo mês (Ex: fecha dia 5, vence dia 11)
+        if (diaCompra > infoCartao.diaFechamento) {
+            // A compra cai na fatura do próximo mês.
+            mesVencimento = mesCompra + 1;
+        } else {
+            // A compra cai na fatura do mês atual.
+            mesVencimento = mesCompra;
+        }
+    } else {
+        // CASO 2: Vencimento no mês seguinte ao fechamento (Ex: fecha dia 29, vence dia 10)
+        const dataFechamentoNoMesDaCompra = new Date(anoCompra, mesCompra, infoCartao.diaFechamento);
+        if (dataCompra.getTime() > dataFechamentoNoMesDaCompra.getTime()) {
+            // Compra feita após o fechamento, fatura vence dois meses à frente.
+            mesVencimento = mesCompra + 2;
+        } else {
+            // Compra feita antes do fechamento, fatura vence no próximo mês.
+            mesVencimento = mesCompra + 1;
+        }
+    }
 
-  // 3. Calcula a data de fechamento com base no vencimento do ciclo atual
-  let dataFechamento;
-  if (infoCartao['Tipo de Fechamento'] === 'fechamento-mes') {
-    const diaFechamento = parseInt(infoCartao['Dia de Fechamento']);
-    dataFechamento = new Date(dataEfetiva.getFullYear(), dataEfetiva.getMonth(), diaFechamento);
-  } else { // 'fechamento-anterior'
-    const diasAntes = parseInt(infoCartao['Dias Antes Vencimento']);
-    dataFechamento = new Date(vencimentoCicloAtual);
-    dataFechamento.setDate(vencimentoCicloAtual.getDate() - diasAntes);
-  }
-  dataFechamento.setHours(0, 0, 0, 0);
+    // Adiciona os meses das parcelas futuras
+    mesVencimento += mesesAdicionais;
 
-  // 4. Compara e retorna a data de vencimento correta
-  if (dataEfetiva > dataFechamento) {
-    // Compra feita DEPOIS do fechamento: o vencimento é no ciclo seguinte
-    // (Ex: compra em Outubro -> vencimento em Dezembro)
-    return new Date(vencimentoCicloAtual.getFullYear(), vencimentoCicloAtual.getMonth() + 1, diaVencimento);
-  } else {
-    // Compra feita ANTES do fechamento: o vencimento é no ciclo atual
-    // (Ex: compra em Outubro -> vencimento em Novembro)
-    return vencimentoCicloAtual;
-  }
+    // O construtor do Date() lida automaticamente com o overflow de meses 
+    // (ex: mês 12 se torna Janeiro do próximo ano) e cria a data correta.
+    return new Date(anoVencimento, mesVencimento, infoCartao.diaVencimento);
 }
 
 /**
