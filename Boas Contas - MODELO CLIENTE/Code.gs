@@ -261,4 +261,3 @@ function registrarTelegram(dados) {
     throw new Error("Ocorreu um erro ao comunicar com o servidor: " + e.message);
   }
 }
-
